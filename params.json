@@ -1,0 +1,6 @@
+{
+  "name": "Baidu-entity-search-competition",
+  "tagline": "",
+  "body": "# Baidu-project\r\n\r\nThis project is for Baidu's entity search competition:\r\n\r\n* Rules are [here](http://nlpcc.baidu.com/rules.html)\r\n* Data are in data/ directory.\r\n\r\nWe are the Chitu team!\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
