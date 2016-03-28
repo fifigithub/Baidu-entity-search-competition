@@ -1,11 +1,18 @@
 <html>
   <head>
-    <title>Bootstrap Example</title>
+    <title>Experimental Result</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.25.6/js/jquery.tablesorter.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script>
+     $(document).ready(function() 
+       { 
+         $("#experiment_result").tablesorter(); 
+       } 
+     ); </script>
     <style>
       .is_gs {
         color: green;
@@ -17,17 +24,28 @@
   </head>
 
   <body>
+    <center>
+      <h1>{{title}}</h1>
+      <h2>(MAP={{map_value|round(3)}})</h2>
+    </center>
+
     <div class="container">
-      <table class="table table-bordered">
-	<thead><tr>
-	  <th>Query term</th>
-	  <th>Ranking Results</th>
-	</tr></thead>
+      <table class="table table-bordered tablesorter" id="experiment_result">
+	<thead>
+	  <tr>
+	    <th>Query Ind</th>
+	    <th>Query term</th>
+	    <th>MAP</th>
+	    <th>Ranking Results</th>
+	  </tr>
+	</thead>
 	
 	<tbody>
 	  {% for query_result in query_results %}
 	  <tr>
+	    <td>{{query_result["id"]}}</td>
 	    <td>{{query_result["term"]}}</td>
+	    <td>{{query_result["MAP"]|round(3)}}</td>
 	    <td>
 	      {% for ranked_result in query_result["ranked"] %}
 	      {% set i = loop.index %}
@@ -37,7 +55,7 @@
 	      {% else %}
 	      {% set display_class = "no_gs" %}
 	      {% endif %}
-  	      <span class="{{display_class}}">{{i}}: {{ranked_result["entity"]}}</span>
+  	      <span class="{{display_class}}" title="{{ranked_result.get('debug_info', '')}}">{{i}}: {{ranked_result["entity"]}}</span>
 	      {% endfor %}
 	    </td>
 	  </tr>
