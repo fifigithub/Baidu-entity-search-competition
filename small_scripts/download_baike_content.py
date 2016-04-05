@@ -32,6 +32,8 @@ class Worker(threading.Thread):
   def run(self):
     while True:
       name, link = task_queue.get()
+      if link.startswith('/'):
+        link = "http://baike.baidu.com" + link
       content = FetchLink(link)
       write_queue.put((name, content))
       
@@ -49,7 +51,7 @@ class Writer(threading.Thread):
       self.writer.writerow({'entity_name' : name, 'content' : content})
       self.outfile.flush()
 
-workers = [Worker() for i in range(500)]
+workers = [Worker() for i in range(100)]
 writer = Writer("entities_db/baike_content.csv", len(link_data))
 
 for w in workers + [writer]:
