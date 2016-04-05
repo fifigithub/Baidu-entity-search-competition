@@ -1,0 +1,111 @@
+<html>
+  <head>
+    <title>Experiment Report</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.25.6/js/jquery.tablesorter.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script>
+     $(document).ready(function() 
+       { 
+         $("#experiment_result").tablesorter(); 
+       } 
+     ); </script>
+    <style>
+      .is_gs {
+        color: green;
+      }
+      .no_gs {
+        
+      }
+     h1, h2, h3 {
+       text-align: center;
+     }
+    </style>
+  </head>
+
+  <body>
+    <h1>{{title}}</h1>
+    <h3>(MAP={{HD_results["score"]|round(3)}})</h2>
+
+    <div class="container">
+      <h2>Held-out data Result</h2>
+      <table class="table table-bordered">
+	{% set data = HD_results %}
+	<tr>
+	  {% for k in sub_tasks %}
+	  <th>{{k}}</th>
+	  {% endfor %}
+	</tr>
+	<tr>
+	  {% for k in sub_tasks %}
+	  <td>{{data[k]["score"]|round(3)}}</td>
+	  {% endfor %}
+	</tr>
+      </table>
+      
+
+      <h2>Cross Validation Error Analysis</h2>
+      {% set data = CV_results %}
+
+      <table class="table table-bordered">
+	<tr>
+	  {% for k in sub_tasks %}
+	  <th>{{k}}</th>
+	  {% endfor %}
+	</tr>
+	<tr>
+	  {% for k in sub_tasks %}
+	  <td>{{data[k]["score"][0]|round(3)}}&plusmn;{{data[k]["score"][1]|round(3)}}</td>
+	  {% endfor %}
+	</tr>
+      </table>
+      
+      
+      {% for subtask in subtasks %}
+      <div>
+	<h3>Results for {{subtask}}</h3>
+
+	{% set st_data = data[subtask] %}
+	<table class="table table-bordered tablesorter"
+	       id="{{subtask}}_experiment_result">
+	  <thead>
+	    <tr>
+	      <th>Query Ind</th>
+	      <th>Query term</th>
+	      <th>MAP</th>
+	      <th>Ranking Results</th>
+	    </tr>
+	  </thead>
+	  
+	  <tbody>
+	    {% for query_result in st_data["query_results"] %}
+	    <tr>
+	      <td>{{query_result["id"]}}</td>
+	      <td>{{query_result["term"]}}</td>
+	      <td>{{query_result["MAP"]|round(3)}}</td>
+	      <td>
+		{% for ranked_result in query_result["ranked"] %}
+		{% set i = loop.index %}
+		{% if i != 1 %}, {% endif %}
+		{% if ranked_result["is_gs"] %}
+		{% set display_class = "is_gs" %}
+		{% else %}
+		{% set display_class = "no_gs" %}
+		{% endif %}
+  		<span class="{{display_class}}" title="{{ranked_result.get('debug_info', '')}}">{{i}}: {{ranked_result["entity"]}}</span>
+		{% endfor %}
+	      </td>
+	    </tr>
+	    {% endfor %}
+	  </tbody>
+	</table>
+
+      </div>
+      {% endfor %}
+    
+    </div>
+  </body>
+</html>

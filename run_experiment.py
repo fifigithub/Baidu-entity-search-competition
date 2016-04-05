@@ -26,10 +26,11 @@ gflags.DEFINE_string("extractors", "nchar,char,nsumchar,sumchar",
                      "Extractors to use for experiemnt")
 gflags.DEFINE_string("reports_dir", "reports", "Directory to store reports.")
 gflags.DEFINE_string("models_dir", "models", "Directory to store models.")
-gflags.DEFINE_string("report_template", "html/error_analysis.html",
+gflags.DEFINE_string("report_template", "html/exp_report.html",
                      "Template for error analysis.")
 gflags.DEFINE_string("cv_data_loc_template", "data/TRAIN SET/{}.cv.txt",
-                     "Template for cross validation data location. Later call .format.")
+                     "Template for cross validation data location. Later call"
+                     " .format.")
 gflags.DEFINE_string("hd_data_loc_template", "data/TRAIN SET/{}.holdout.txt",
                      "Template for held-out data location. Later call .format.")
 
@@ -140,6 +141,7 @@ def main(argv):
   report_data['CV_results'] = RunCrossValidation(e_name_list, cv_data)
   model = models.BuildModel(e_name_list, cv_data)
   report_data['HD_results'] = model.EvaluateOn(hd_data)
+  report_data['sub_tasks'] = settings.sub_tasks
 
   model.Save(model_loc)
   
