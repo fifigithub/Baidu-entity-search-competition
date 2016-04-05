@@ -33,6 +33,7 @@ gflags.DEFINE_string("cv_data_loc_template", "data/TRAIN SET/{}.cv.txt",
                      " .format.")
 gflags.DEFINE_string("hd_data_loc_template", "data/TRAIN SET/{}.holdout.txt",
                      "Template for held-out data location. Later call .format.")
+gflags.DEFINE_int("cv_folds", 10, "folds of cross validations")
 
 
 def LoadInData(data_loc, test_data=False):
@@ -71,7 +72,7 @@ def LoadHDData():
   return data
 
 
-def _IterCVConfig(full_data, cv=10, seed=0):
+def _IterCVConfig(full_data, cv, seed=0):
   splitted = {}
   rdm = random.Random(seed)
   for task_name, data in full_data.iteritems():
@@ -97,17 +98,23 @@ def _IterCVConfig(full_data, cv=10, seed=0):
 
 
 def RunCrossValidation(extractor, cv_data, seed=0):
-  all_results = dict((i, []) for i in settings.sub_tasks)
-  for train_data, test_data in _IterCVConfig(cv_data):
+  all_scores = dict((i, []) for i in settings.sub_tasks)
+  all_query_results = dict((i, []) for i in settings.sub_tasks)
+
+  for train_data, test_data in _IterCVConfig(cv_data, gflags.FLAGS.cv_folds):
     model = models.BuildModel(extractor, train_data)
     result = model.EvaluateOn(test_data)
     
     for t in settings.sub_tasks:
-      all_results[t].append(result[t]["score"])
+      all_scores[t].append(result[t]["score"])
+      all_query_results[t].extend(result[t]["query_results"])
 
   report_data = dict((i, {"score" : (None, None),}) for i in settings.sub_tasks)
-  for t, scores in all_results.iteritems():
-    report_data[t] = {"score" : (numpy.mean(scores), numpy.std(scores))}
+  for t in settings.sub_tasks:
+    scores = all_scores[t]
+    query_results = all_query_results[t]
+    report_data[t] = {"score" : (numpy.mean(scores), numpy.std(scores)),
+                      "query_results" : query_results}
 
   return report_data
 
