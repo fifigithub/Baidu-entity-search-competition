@@ -66,7 +66,7 @@ def LoadHDData():
   data = {}
   for task in settings.sub_tasks:
     data_loc = gflags.FLAGS.hd_data_loc_template.format(task)
-    data[task] = LoadInData(data_loc, test_data=True)
+    data[task] = LoadInData(data_loc, test_data=False)
   return data
 
 
@@ -106,7 +106,7 @@ def RunCrossValidation(extractor, cv_data, seed=0):
 
   report_data = dict((i, {"score" : (None, None),}) for i in settings.sub_tasks)
   for t, scores in all_results.iteritems():
-    report_data[t] = (numpy.mean(scores), numpy.std(scores))
+    report_data[t] = {"score" : (numpy.mean(scores), numpy.std(scores))}
 
   return report_data
 
@@ -118,8 +118,7 @@ def main(argv):
     print '%s\\nUsage: %s ARGS\\n%s' % (e, sys.argv[0], FLAGS)
     sys.exit(1)
 
-  e_name_list = gflags.FLAGS.extractors.split(',')
-  extractor = extractors.BuildExtractor(e_name_list)
+  e_name_list = gflags.FLAGS.extractors
 
   # TODO(xuehuichao): Actually implement the central experiments database.
   experiment_id = 101
@@ -138,8 +137,8 @@ def main(argv):
   }
   cv_data = LoadCVData()
   hd_data = LoadHDData()
-  report_data['CV_results'] = RunCrossValidation(extractor, cv_data)
-  model = models.BuildModel(extractor, cv_data)
+  report_data['CV_results'] = RunCrossValidation(e_name_list, cv_data)
+  model = models.BuildModel(e_name_list, cv_data)
   report_data['HD_results'] = model.EvaluateOn(hd_data)
 
   model.Save(model_loc)
@@ -150,7 +149,7 @@ def main(argv):
   for t in settings.sub_tasks:
     m, s = report_data['CV_results'][t]["score"]
     line.append("%.2f+-%.2f" % (m, s))
-  print tabulate([line], headers=settings.sub_tasks)
+  print tabulate.tabulate([line], headers=settings.sub_tasks)
 
   print
   print "Held-out set:"
@@ -158,7 +157,7 @@ def main(argv):
   for t in settings.sub_tasks:
     result = report_data['HD_results'][t]["score"]
     line.append("%.2f" % result)
-  print tabulate([line], headers=settings.sub_tasks)
+  print tabulate.tabulate([line], headers=settings.sub_tasks)
 
   # Write report
   template = jinja2.Template(open(gflags.FLAGS.report_template).read())

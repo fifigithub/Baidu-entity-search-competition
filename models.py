@@ -4,12 +4,13 @@ This module includes a logisitc regression model, which assigns a probability
 for whether a result matches a query in a subtask.
 """
 
-import cPickle
 import copy
 import numpy
 import random
 import sklearn
+import extractors
 from sklearn import feature_extraction
+from sklearn.externals import joblib
 from sklearn import linear_model
 from sklearn import cross_validation
 
@@ -36,8 +37,9 @@ def apk(actual, predicted, k=None):
 
 class LogisticModel(object):
 
-  def __init__(self, extractor, train_data):
-    self.extractor = extractor
+  def __init__(self, extractors_name, train_data):
+    self.extractors_name = extractors_name
+    self.extractor = extractors.BuildExtractor(extractors_name)
     all_train_data = []
     for q_type, loaded_in_data in train_data.iteritems():
       all_train_data.extend([(q_type, i) for i in loaded_in_data])
@@ -45,7 +47,7 @@ class LogisticModel(object):
     ml_train_data = []
     for q_type, (query, entity_info_list) in all_train_data:
       for ent, gs in entity_info_list:
-        ml_train_data.append((dict(extractor((q_type, query), ent)), gs))
+        ml_train_data.append((dict(self.extractor((q_type, query), ent)), gs))
 
     v = feature_extraction.DictVectorizer()
     D = [d for d, y in ml_train_data]
@@ -56,14 +58,19 @@ class LogisticModel(object):
     self.logistic_model = logistic_regression.fit(X, Y)
     self.vectorizer = v
 
+  def __getstate__(self):
+    return (self.extractors_name, self.logistic_model, self.vectorizer)
+
+  def __setstate__(self, state):
+    self.extractors_name, self.logistic_model, self.vectorizer = state
+    self.extractors = extractors.BuildExtractor(extractors_name)
+
   def Save(self, model_loc):
-    with open(model_loc, 'w') as ofile:
-      cPickle.dump(self, ofile)
+    joblib.dump(self, model_loc)
 
   @staticmethod
   def LoadFrom(model_loc):
-    with open(model_loc) as infile:
-      return cPickle.load(infile)
+    return joblib.load(model_loc)
 
   def EvaluateOn(self, test_data, seed=None):
     if seed is None:

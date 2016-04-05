@@ -49,5 +49,6 @@ def CombinedModel(*models):
   return wrappee
 
 
-def BuildExtractor(name_list):
+def BuildExtractor(extractor_name):
+  name_list = extractor_name.split(',')
   return CombinedModel(*[_extractors_map[name] for name in name_list])
