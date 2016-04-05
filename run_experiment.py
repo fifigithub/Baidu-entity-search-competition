@@ -33,7 +33,7 @@ gflags.DEFINE_string("cv_data_loc_template", "data/TRAIN SET/{}.cv.txt",
                      " .format.")
 gflags.DEFINE_string("hd_data_loc_template", "data/TRAIN SET/{}.holdout.txt",
                      "Template for held-out data location. Later call .format.")
-gflags.DEFINE_int("cv_folds", 10, "folds of cross validations")
+gflags.DEFINE_integer("cv_folds", 10, "folds of cross validations")
 
 
 def LoadInData(data_loc, test_data=False):

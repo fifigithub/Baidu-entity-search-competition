@@ -3,6 +3,7 @@
 When defining a new query, use @Extractor to register it into the extractor
 database.
 """
+import entitydb
 
 _extractors_map = {}
 
@@ -25,18 +26,18 @@ def ExtractCharOverlapFeature((q_type, query), entity):
 @Extractor("nsumchar")
 def ExtractNSumCharOverlapFeature((q_type, query), entity):
   try:
-    summary = entity_summary_map[entity]
+    summary = entitydb.LookupEntitySummary(entity)
     return [(q_type + 'NSumCharOverlap', len(set(query).intersection(set(summary))))]
-  except:
+  except IndexError:
     return [(q_type + 'NO_SUMMARY', 1)]
 
 
 @Extractor("sumchar")
 def ExtractSumCharOverlapFeature((q_type, query), entity):
   try:
-    summary = entity_summary_map[entity]
+    summary = entitydb.LookupEntitySummary(entity)
     return [(q_type + 'SumCharOverlap=%s' % i, 1) for i in set(query).intersection(set(summary))]
-  except:
+  except IndexError:
     return [(q_type + 'NO_SUMMARY', 1)]
 
 
