@@ -1,4 +1,4 @@
-# Baidu-project
+# Entity Ranking with Logistic Regression
 
 This project is for Baidu's entity search competition:
 
@@ -8,7 +8,9 @@ This project is for Baidu's entity search competition:
 We are the Chitu team! -- [Link](http://fifigithub.github.io/Baidu-entity-search-competition) to project page.
 
 
-10-fold cross validation experiment, and testing on hold-out set.
+## Usage
+### 10-fold cross validation experiment
+The following command runs 10-fold cross validation, and tests on hold-out set.
 ```sh
 python run_experiment.py --extractors=e1,e2...
 ```
@@ -26,6 +28,7 @@ Hold-out set:
 
 ```
 
+### Listing Past Experiment Results
 Listing past experiment result overview.
 
 ```sh
@@ -38,7 +41,7 @@ Evaluation result on hold-out set:
 | 101    | e1,e2,... |
 ```
 
-Export result
+### Export Submission Output
 ```sh
 python export_result.py --model_id=101 --test_dir=data/DEV\ SET --output_dir=output
 ```
