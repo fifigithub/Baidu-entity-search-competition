@@ -49,7 +49,7 @@ class Writer(threading.Thread):
       self.writer.writerow({'entity_name' : name, 'content' : content})
       self.outfile.flush()
 
-workers = [Worker() for i in range(100)]
+workers = [Worker() for i in range(500)]
 writer = Writer("entities_db/baike_content.csv", len(link_data))
 
 for w in workers + [writer]:
