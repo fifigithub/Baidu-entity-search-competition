@@ -5,6 +5,7 @@ for whether a result matches a query in a subtask.
 """
 
 import copy
+import gflags
 import numpy
 import random
 import sklearn
@@ -13,6 +14,8 @@ from sklearn import feature_extraction
 from sklearn.externals import joblib
 from sklearn import linear_model
 from sklearn import cross_validation
+
+gflags.DEFINE_string("models_dir", "models", "Directory to store models.")
 
 
 def apk(actual, predicted, k=None):
@@ -63,7 +66,7 @@ class LogisticModel(object):
 
   def __setstate__(self, state):
     self.extractors_name, self.logistic_model, self.vectorizer = state
-    self.extractors = extractors.BuildExtractor(extractors_name)
+    self.extractor = extractors.BuildExtractor(self.extractors_name)
 
   def Save(self, model_loc):
     joblib.dump(self, model_loc)

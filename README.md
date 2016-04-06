@@ -53,4 +53,3 @@ Evaluation result on hold-out set:
 ```sh
 python export_result.py --model_id=101 --test_dir=data/DEV\ SET --output_dir=output
 ```
-

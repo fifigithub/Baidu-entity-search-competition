@@ -19,6 +19,7 @@ import copy
 import jinja2
 import models
 import utils
+import tqdm
 import unicodecsv as csv
 from os import path
 
@@ -26,7 +27,6 @@ from os import path
 gflags.DEFINE_string("extractors", "nchar,char,nsumchar,sumchar",
                      "Extractors to use for experiemnt")
 gflags.DEFINE_string("reports_dir", "reports", "Directory to store reports.")
-gflags.DEFINE_string("models_dir", "models", "Directory to store models.")
 gflags.DEFINE_string("report_template", "html/exp_report.html",
                      "Template for error analysis.")
 gflags.DEFINE_string("cv_data_loc_template", "data/TRAIN SET/{}.cv.txt",
@@ -37,39 +37,18 @@ gflags.DEFINE_string("hd_data_loc_template", "data/TRAIN SET/{}.holdout.txt",
 gflags.DEFINE_integer("cv_folds", 10, "folds of cross validations")
 
 
-def LoadInData(data_loc, test_data=False):
-  lines = unicode(open(data_loc).read(), 'gbk').split('\n')
-  parsing_result = []
-  for line in lines:
-    terms = line.split('\t')
-    items = []
-    for i in terms[1:]:
-      if test_data:
-        ent, score = i, None
-
-      else:
-        colon_separated = i.split(':')
-        ent = ':'.join(colon_separated[:-1])
-        score = int(colon_separated[-1])
-      items.append((ent, score))
-    if len(items) == 0:
-      continue
-    parsing_result.append((terms[0], items))
-  return parsing_result
-
-
 def LoadCVData():
   data = {}
   for task in settings.sub_tasks:
     data_loc = gflags.FLAGS.cv_data_loc_template.format(task)
-    data[task] = LoadInData(data_loc, test_data=False)
+    data[task] = utils.LoadInData(data_loc, test_data=False)
   return data
 
 def LoadHDData():
   data = {}
   for task in settings.sub_tasks:
     data_loc = gflags.FLAGS.hd_data_loc_template.format(task)
-    data[task] = LoadInData(data_loc, test_data=False)
+    data[task] = utils.LoadInData(data_loc, test_data=False)
   return data
 
 
@@ -102,7 +81,10 @@ def RunCrossValidation(extractor, cv_data, seed=0):
   all_scores = dict((i, []) for i in settings.sub_tasks)
   all_query_results = dict((i, []) for i in settings.sub_tasks)
 
-  for train_data, test_data in _IterCVConfig(cv_data, gflags.FLAGS.cv_folds):
+  for train_data, test_data in tqdm.tqdm(
+      _IterCVConfig(cv_data, gflags.FLAGS.cv_folds),
+      "Cross validating",
+      gflags.FLAGS.cv_folds):
     model = models.BuildModel(extractor, train_data)
     result = model.EvaluateOn(test_data)
     
@@ -120,13 +102,8 @@ def RunCrossValidation(extractor, cv_data, seed=0):
   return report_data
 
 
-def main(argv):
-  try:
-    argv = gflags.FLAGS(argv)
-  except gflags.FlagsError, e:
-    print '%s\\nUsage: %s ARGS\\n%s' % (e, sys.argv[0], FLAGS)
-    sys.exit(1)
-
+def main():
+  utils.Initialize()
   e_name_list = gflags.FLAGS.extractors
 
   # TODO(xuehuichao): Actually implement the central experiments database.
@@ -177,4 +154,4 @@ def main(argv):
     print >> ofile, template.render(report_data).encode('utf8')
 
 if __name__ == "__main__":
-  main(sys.argv)
+  main()
