@@ -18,6 +18,7 @@ import random
 import copy
 import jinja2
 import models
+import utils
 import unicodecsv as csv
 from os import path
 
@@ -130,6 +131,8 @@ def main(argv):
 
   # TODO(xuehuichao): Actually implement the central experiments database.
   experiment_id = 101
+  utils.mkdir_p(gflags.FLAGS.reports_dir)
+  utils.mkdir_p(gflags.FLAGS.models_dir)
   report_loc = path.join(gflags.FLAGS.reports_dir, "%.3d.html" % experiment_id)
   model_loc = path.join(gflags.FLAGS.models_dir, "%.3d.model" % experiment_id)
 
