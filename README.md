@@ -44,16 +44,17 @@ Hold-out set:
 ```
 
 ### Listing Past Experiment Results
-Listing past experiment result overview.
+Listing past experiment result overview. For each feature set, we only list the last run.
 
 ```sh
-python experiments_summary.py --export_to=reports/summary.html
+python experiments_summary.py
 ```
-Output will be in `reports/summary.html`
+Output:
 ```
 Evaluation result on hold-out set:
-| Exp ID | Features | task1  | task2 | ...  |
-| 101    | e1,e2,... |
+  ID  Time                             MAP    Celebrity     Movie    Restaurant    tvShow
+  ----  --------------------------  --------  -----------  --------  ------------  --------
+     6  2016-04-06 16:34:30.566979  0.276946     0.360595  0.331004      0.259918  0.156267
 ```
 
 ### Export Submission Output
