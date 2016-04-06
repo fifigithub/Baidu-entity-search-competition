@@ -11,15 +11,10 @@ Example:
 import sys
 import gflags
 import settings
-import tabulate
 import extractors
-import numpy
-import random
-import copy
-import jinja2
 import models
 import utils
-import tqdm
+import experiments
 import unicodecsv as csv
 from os import path
 
@@ -35,7 +30,6 @@ gflags.DEFINE_string("cv_data_loc_template", "data/TRAIN SET/{}.cv.txt",
                      " .format.")
 gflags.DEFINE_string("hd_data_loc_template", "data/TRAIN SET/{}.holdout.txt",
                      "Template for held-out data location. Later call .format.")
-gflags.DEFINE_integer("cv_folds", 10, "folds of cross validations")
 
 
 def LoadCVData():
@@ -53,62 +47,12 @@ def LoadHDData():
   return data
 
 
-def _IterCVConfig(full_data, cv, seed=0):
-  splitted = {}
-  rdm = random.Random(seed)
-  for task_name, data in full_data.iteritems():
-    splitted[task_name] = []
-    shuffled_data = copy.copy(data)
-    rdm.shuffle(shuffled_data)
-    
-    l = len(data)
-    for i in range(cv):
-      start = i * l / cv
-      end = (i + 1) * l / cv
-      the_slice = shuffled_data[start:end]
-      splitted[task_name].append(the_slice)
-
-  for i in range(cv):
-    train_data = dict((t, []) for t in settings.sub_tasks)
-    for j in range(cv):
-      if j != i:
-        for t in settings.sub_tasks:
-          train_data[t].extend(splitted[t][j])
-    test_data = dict((t, splitted[t][i]) for t in settings.sub_tasks)
-    yield (train_data, test_data)
-
-
-def RunCrossValidation(extractor, cv_data, seed=0):
-  all_scores = dict((i, []) for i in settings.sub_tasks)
-  all_query_results = dict((i, []) for i in settings.sub_tasks)
-
-  for train_data, test_data in tqdm.tqdm(
-      _IterCVConfig(cv_data, gflags.FLAGS.cv_folds),
-      "Cross validating",
-      gflags.FLAGS.cv_folds):
-    model = models.BuildModel(extractor, train_data)
-    result = model.EvaluateOn(test_data)
-    
-    for t in settings.sub_tasks:
-      all_scores[t].append(result[t]["score"])
-      all_query_results[t].extend(result[t]["query_results"])
-
-  report_data = dict((i, {"score" : (None, None),}) for i in settings.sub_tasks)
-  for t in settings.sub_tasks:
-    scores = all_scores[t]
-    query_results = all_query_results[t]
-    report_data[t] = {"score" : (numpy.mean(scores), numpy.std(scores)),
-                      "query_results" : query_results}
-
-  return report_data
-
-
 def main():
   utils.Initialize()
   e_name_list = gflags.FLAGS.extractors
 
-  # TODO(xuehuichao): Actually implement the central experiments database.
-  experiment_id = 101
+  new_experiment = experiments.StartNewExperiment(e_name_list)
+  experiment_id = new_experiment.GetID()
   utils.mkdir_p(gflags.FLAGS.reports_dir)
   utils.mkdir_p(gflags.FLAGS.models_dir)
   report_loc = path.join(gflags.FLAGS.reports_dir, "%.3d.html" % experiment_id)
@@ -120,39 +64,20 @@ def main():
       model_loc,
   )
   
-  report_data = {
-      "CV_results" : {},
-      "HD_results" : {}
-  }
   cv_data = LoadCVData()
   hd_data = LoadHDData()
-  report_data['CV_results'] = RunCrossValidation(e_name_list, cv_data)
+
+  new_experiment.RunCrossValidation(cv_data)
+
   model = models.BuildModel(e_name_list, cv_data)
-  report_data['HD_results'] = model.EvaluateOn(hd_data)
-  report_data['sub_tasks'] = settings.sub_tasks
-
   model.Save(model_loc)
+  hd_result = model.EvaluateOn(hd_data)
+  new_experiment.RecordHeldoutDataEval(hd_result)
+
+  new_experiment.Save()
+  new_experiment.PrintSummary()
+  new_experiment.ExportReport(report_loc)
+
   
-  # Print out summary
-  print "Cross validation:"
-  line = []
-  for t in settings.sub_tasks:
-    m, s = report_data['CV_results'][t]["score"]
-    line.append("%.2f+-%.2f" % (m, s))
-  print tabulate.tabulate([line], headers=settings.sub_tasks)
-
-  print
-  print "Held-out set:"
-  line = []
-  for t in settings.sub_tasks:
-    result = report_data['HD_results'][t]["score"]
-    line.append("%.2f" % result)
-  print tabulate.tabulate([line], headers=settings.sub_tasks)
-
-  # Write report
-  template = jinja2.Template(open(gflags.FLAGS.report_template).read())
-  with open(report_loc, 'w') as ofile:
-    print >> ofile, template.render(report_data).encode('utf8')
-
 if __name__ == "__main__":
   main()
