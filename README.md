@@ -9,10 +9,17 @@ We are the Chitu team! -- [Link](http://fifigithub.github.io/Baidu-entity-search
 
 ## Features
 
-1. Awesome error analysis interface [demo](http://www.xuehuichao.com/error_analysis.html). 
+1. Awesome error analysis interface ([demo](http://www.xuehuichao.com/error_analysis.html)). 
    * Viewing queries the system performed the worst
    * Summarize performance on held-out as well as cross-validation data
 2. Easy to implement new feature extractors
+   * Write a function, and decorate it with @Extractor
+
+      ```python
+      @Extractor
+      def HasCommonCharacter((q_type, query), entity):
+        return [("HAS_COMMON_CHAR", int(len(set(query).intersection(set(entity)) != 0)))]
+      ```
 3. Scripts to download data
    * Multi-thread downloading Baidu Baike data (in small_scripts/)
 
