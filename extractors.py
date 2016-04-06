@@ -41,6 +41,23 @@ def ExtractSumCharOverlapFeature((q_type, query), entity):
     return [(q_type + 'NO_SUMMARY', 1)]
 
 
+@Extractor("cont_match")
+def ExtractQueryInContent((q_type, query), entity):
+  result = []
+  try:
+    content = entitydb.LookupEntityContent(entity)
+    if query in content:
+      result.append((q_type + "SHOWED_UP_IN_CONTENT", 1))
+    content_charset = set(content)
+    for char in set(query).intersection(content_charset):
+      result.append((q_type + "ContCharOverlap=%s" % char, 1))
+
+    return result
+
+  except IndexError:
+    return [(q_type + 'NO_CONTENT', 1)]
+
+
 def CombinedModel(*models):
   def wrappee(*args, **kw):
     result = []

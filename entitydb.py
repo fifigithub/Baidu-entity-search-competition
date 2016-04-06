@@ -46,13 +46,23 @@ class EntityDB(object):
             "content" : content}
 
   def LookupEntitySummary(self, entity_name):
-    """Looks up entity in the summary dictionary.
+    """Looks up entity summary only.
 
     Raises:
       IndexError: when entity doesn't have an entry.
     """
     return self._GetEntryByName(entity_name)["summary"]
 
+  def LookupEntityContent(self, entity_name):
+    """Looks up entity content.
+    Raises:
+      IndexError: when entity doesn't have an entry
+    """
+    return self._GetEntryByName(entity_name)["content"]
+
 
 def LookupEntitySummary(entity_name):
   return EntityDB.GetTheDB().LookupEntitySummary(entity_name)
+
+def LookupEntityContent(entity_name):
+  return EntityDB.GetTheDB().LookupEntityContent(entity_name)
