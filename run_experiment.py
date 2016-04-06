@@ -24,7 +24,8 @@ import unicodecsv as csv
 from os import path
 
 
-gflags.DEFINE_string("extractors", "nchar,char,nsumchar,sumchar",
+gflags.DEFINE_string("extractors",
+                     "nchar,char,nsumchar,sumchar,cont_bigram,cont_match",
                      "Extractors to use for experiemnt")
 gflags.DEFINE_string("reports_dir", "reports", "Directory to store reports.")
 gflags.DEFINE_string("report_template", "html/exp_report.html",
