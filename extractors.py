@@ -58,6 +58,29 @@ def ExtractQueryInContent((q_type, query), entity):
     return [(q_type + 'NO_CONTENT', 1)]
 
 
+def EnumerateNGram(s, n):
+  l = len(s)
+  result = []
+  for i in range(l - n + 1):
+    result.append(s[i:i+n])
+  return result
+
+
+@Extractor("cont_bigram")
+def ExtractQueryInContent((q_type, query), entity):
+  result = []
+  try:
+    content = entitydb.LookupEntityContent(entity)
+    content_charset = set(EnumerateNGram(content, 2))
+    overlaps = len(set(EnumerateNGram(query, 2)).intersection(content_charset))
+    result.append((q_type + "ContBigramOverlaps", overlaps))
+
+    return result
+
+  except IndexError:
+    return [(q_type + 'NO_CONTENT', 1)]
+
+
 def CombinedModel(*models):
   def wrappee(*args, **kw):
     result = []
