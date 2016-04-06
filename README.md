@@ -7,6 +7,14 @@ This project is for Baidu's entity search competition:
 
 We are the Chitu team! -- [Link](http://fifigithub.github.io/Baidu-entity-search-competition) to project page.
 
+## Features
+
+1. Awesome error analysis interface [demo](http://www.xuehuichao.com/error_analysis.html). 
+   * Viewing queries the system performed the worst
+   * Summarize performance on held-out as well as cross-validation data
+2. Easy to implement new feature extractors
+3. Scripts to download data
+   * Multi-thread downloading Baidu Baike data (in small_scripts/)
 
 ## Usage
 ### 10-fold cross validation experiment
