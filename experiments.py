@@ -6,17 +6,73 @@ data.
 
 import tabulate
 import settings
+import datetime
 import tqdm
+import json
 import random
 import gflags
 import copy
 import models
 import numpy
 import jinja2
-
+import sqlite3
 
 gflags.DEFINE_integer("cv_folds", 10, "folds of cross validations")
 gflags.DEFINE_string("experiment_db_loc", "experiments.db", "Experimental Result database")
+
+
+class ExperimentDB(object):
+
+  def __init__(self, location):
+    self.location = location
+    self.connection = sqlite3.connect(location)
+    self.cursor = self.connection.cursor()
+    self._CreateTablesIfNotExist()
+
+  the_db = None
+  @staticmethod
+  def GetTheDB():
+    if ExperimentDB.the_db is None:
+      ExperimentDB.the_db = ExperimentDB(gflags.FLAGS.experiment_db_loc)
+    return ExperimentDB.the_db
+
+  def _CreateTablesIfNotExist(self):
+    self.cursor.execute("""
+    create table if not exists experiments(
+      exp_id integer primary key autoincrement,
+      timestamp datetime,
+      features string,
+      avg_map real,
+      celebrity real,
+      movie real,
+      restaurant real,
+      tvShow real,
+      cv_result text,
+      hd_result text
+    )""")
+    self.connection.commit()
+
+  def CreateNewExperiemnt(self):
+    self.cursor.execute("insert into experiments(timestamp) values(?)", (
+        datetime.datetime.now(),))
+    exp_id = self.cursor.lastrowid
+    self.connection.commit()
+    return exp_id
+
+  def SaveResult(
+          self, exp_id, e_name_list, celebrity_score, movie_score, 
+          restaurant_score, tvShow_score, cv_result, hd_result):
+    self.cursor.execute(
+        "update experiments set "
+        "features=?, avg_map=?, celebrity=?, movie=?, restaurant=?, tvShow=?,"
+        "cv_result=?, hd_result=? where exp_id=? ", (
+          e_name_list,
+          numpy.mean([celebrity_score, movie_score, restaurant_score, tvShow_score]),
+          celebrity_score, movie_score, restaurant_score, tvShow_score,
+          json.dumps(cv_result), json.dumps(hd_result), exp_id,
+        )
+    )
+    self.connection.commit()
 
 
 def _IterCVConfig(full_data, cv, seed=0):
@@ -46,17 +102,26 @@ def _IterCVConfig(full_data, cv, seed=0):
 
 class Experiment(object):
 
-  def __init__(self, e_name_list):
+  def __init__(self, exp_id, e_name_list):
     self.cv_result = None
     self.hd_result = None
-    self.exp_id = 101
+    self.exp_id = exp_id
     self.e_name_list = e_name_list
 
   def GetID(self):
     return self.exp_id
 
   def Save(self):
-    pass
+    exp_db = ExperimentDB.GetTheDB()
+    exp_db.SaveResult(
+        self.exp_id, self.e_name_list,
+        self.hd_result["celebrity"]["score"],
+        self.hd_result["movie"]["score"],
+        self.hd_result["restaurant"]["score"],
+        self.hd_result["tvShow"]["score"],
+        self.cv_result,
+        self.hd_result,
+    )
 
   def RunCrossValidation(self, cv_data, seed=0):
     all_scores = dict((i, []) for i in settings.sub_tasks)
@@ -113,4 +178,6 @@ class Experiment(object):
 
 
 def StartNewExperiment(e_name_list):
-  return Experiment(e_name_list)
+  exp_db = ExperimentDB.GetTheDB()
+  exp_id = exp_db.CreateNewExperiemnt()
+  return Experiment(exp_id, e_name_list)
