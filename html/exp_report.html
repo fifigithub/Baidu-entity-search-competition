@@ -52,39 +52,48 @@
 
     <div class="container">
       <h1>{{title}}</h1>
-      <h2>Held-out data Result</h2>
-      <h3>(Average MAP: {{HD_results["score"]|round(3)}})</h2>
-      <table class="table table-bordered">
-	{% set data = HD_results %}
-	<tr>
-	  {% for k in sub_tasks %}
-	  <th>{{k}}</th>
-	  {% endfor %}
-	</tr>
-	<tr>
-	  {% for k in sub_tasks %}
-	  <td>{{data[k]["score"]|round(3)}}</td>
-	  {% endfor %}
-	</tr>
-      </table>
+      <h3>Features: {{features}}</h3>
+      <hr/>
+
       
+      <h2>Result Summary</h2>
+      <div class="row-fluid">
+	<div class="span6">
+	  <h3>Held-out data Result(Average MAP: {{HD_results["score"]|round(3)}})</h3>
+	  <table class="table table-bordered">
+	    {% set data = HD_results %}
+	    <tr>
+	      {% for k in sub_tasks %}
+	      <th>{{k}}</th>
+	      {% endfor %}
+	    </tr>
+	    <tr>
+	      {% for k in sub_tasks %}
+	      <td>{{data[k]["score"]|round(3)}}</td>
+	      {% endfor %}
+	    </tr>
+	  </table>
+	</div>
+	<div class="span6">
+	  <h3>Cross-validation Main Result</h3>
+	  <table class="table table-bordered">
+	    {% set data = CV_results %}      
+	    <tr>
+	      {% for k in sub_tasks %}
+	      <th>{{k}}</th>
+	      {% endfor %}
+	    </tr>
+	    <tr>
+	      {% for k in sub_tasks %}
+	      <td>{{data[k]["score"][0]|round(3)}}&plusmn;{{data[k]["score"][1]|round(3)}}</td>
+	      {% endfor %}
+	    </tr>
+	  </table>
+	</div>
+      </div>
 
       <h2>Cross Validation Error Analysis</h2>
-      {% set data = CV_results %}
-
-      <table class="table table-bordered">
-	<tr>
-	  {% for k in sub_tasks %}
-	  <th>{{k}}</th>
-	  {% endfor %}
-	</tr>
-	<tr>
-	  {% for k in sub_tasks %}
-	  <td>{{data[k]["score"][0]|round(3)}}&plusmn;{{data[k]["score"][1]|round(3)}}</td>
-	  {% endfor %}
-	</tr>
-      </table>
-      
+      {% set data = CV_results %}      
       
       {% for subtask in sub_tasks %}
       <div>

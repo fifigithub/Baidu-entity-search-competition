@@ -53,11 +53,11 @@ class ExperimentDB(object):
     self.connection.commit()
 
   def CreateNewExperiemnt(self):
-    self.cursor.execute("insert into experiments(timestamp) values(?)", (
-        datetime.datetime.now(),))
+    timestamp = datetime.datetime.now()
+    self.cursor.execute("insert into experiments(timestamp) values(?)", (timestamp,))
     exp_id = self.cursor.lastrowid
     self.connection.commit()
-    return exp_id
+    return (exp_id, timestamp)
 
   def SaveResult(
           self, exp_id, e_name_list, celebrity_score, movie_score, 
@@ -102,11 +102,12 @@ def _IterCVConfig(full_data, cv, seed=0):
 
 class Experiment(object):
 
-  def __init__(self, exp_id, e_name_list):
-    self.cv_result = None
-    self.hd_result = None
+  def __init__(self, exp_id, timestamp, e_name_list, cv_result=None, hd_result=None):
     self.exp_id = exp_id
+    self.timestamp = timestamp
     self.e_name_list = e_name_list
+    self.cv_result = cv_result
+    self.hd_result = hd_result
 
   def GetID(self):
     return self.exp_id
@@ -171,6 +172,8 @@ class Experiment(object):
     report_data['CV_results'] = self.cv_result
     report_data['HD_results'] = self.hd_result
     report_data['sub_tasks'] = settings.sub_tasks
+    report_data['features'] = self.e_name_list
+    report_data['title'] = "Experiment {} ({})".format(self.exp_id, self.timestamp)
 
     template = jinja2.Template(open(gflags.FLAGS.report_template).read())
     with open(report_loc, 'w') as ofile:
@@ -179,5 +182,5 @@ class Experiment(object):
 
 def StartNewExperiment(e_name_list):
   exp_db = ExperimentDB.GetTheDB()
-  exp_id = exp_db.CreateNewExperiemnt()
-  return Experiment(exp_id, e_name_list)
+  exp_id, timestamp = exp_db.CreateNewExperiemnt()
+  return Experiment(exp_id, timestamp, e_name_list)
