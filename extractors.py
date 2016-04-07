@@ -66,6 +66,8 @@ def EnumerateNGram(s, n):
   return result
 
 
+# Bigram features
+
 @Extractor("cont_bigram")
 def ExtractQueryInContent((q_type, query), entity):
   result = []
@@ -79,6 +81,29 @@ def ExtractQueryInContent((q_type, query), entity):
 
   except IndexError:
     return [(q_type + 'NO_CONTENT', 1)]
+
+
+def Extract2gramOverlap(text_ent_name, text_extractor):
+  def wrappee((q_type, query), entity):
+    result = []
+    try:
+      content = text_extractor(entity)
+      content_charset = set(EnumerateNGram(content, 2))
+      overlaps = len(set(EnumerateNGram(query, 2)).intersection(content_charset))
+      result.append((q_type + text_ent_name + "BigramOverlaps", overlaps))
+
+      return result
+
+    except IndexError:
+      return [(q_type + 'NO_%s' % text_ent_name, 1)]
+
+  return wrappee
+
+Extractor("2gcont")(Extract2gramOverlap(
+  'CONTENT', lambda entity: entitydb.LookupEntityContent(entity)))
+Extractor("2gsum")(Extract2gramOverlap(
+  'SUMMARY', lambda entity: entitydb.LookupEntitySummary(entity)))
+Extractor("2gsurf")(Extract2gramOverlap('ENTITY', lambda entity: entity))
 
 
 def CombinedModel(*models):
