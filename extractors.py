@@ -69,13 +69,28 @@ def EnumerateNGram(s, n):
 # Bigram features
 
 @Extractor("cont_bigram")
-def ExtractQueryInContent((q_type, query), entity):
+def ExtractQueryInContentBigram((q_type, query), entity):
   result = []
   try:
     content = entitydb.LookupEntityContent(entity)
     content_charset = set(EnumerateNGram(content, 2))
     overlaps = len(set(EnumerateNGram(query, 2)).intersection(content_charset))
     result.append((q_type + "ContBigramOverlaps", overlaps))
+
+    return result
+
+  except IndexError:
+    return [(q_type + 'NO_CONTENT', 1)]
+
+
+@Extractor("cont_trigram")
+def ExtractQueryInContentTrigram((q_type, query), entity):
+  result = []
+  try:
+    content = entitydb.LookupEntityContent(entity)
+    content_charset = set(EnumerateNGram(content, 3))
+    overlaps = len(set(EnumerateNGram(query, 3)).intersection(content_charset))
+    result.append((q_type + "ContTrigramOverlaps", overlaps))
 
     return result
 
