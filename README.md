@@ -51,11 +51,10 @@ python experiments_summary.py
 ```
 Output:
 ```
-Evaluation result on hold-out set:
   ID  features                                                 MAP    Celebrity     Movie    Restaurant    tvShow  time                                                                                      
   ----  --------------------------------------------------  --------  -----------  --------  ------------  --------  --------------------------                                                                
      7  nchar,char,nsumchar,sumchar,cont_bigram,cont_match  0.460184     0.822061  0.379818      0.277135  0.361721  2016-04-06 17:14:28.113651                                                                
-	    6  nchar                                               0.276946     0.360595  0.331004      0.259918  0.156267  2016-04-06 16:34:30.566979
+     6  nchar                                               0.276946     0.360595  0.331004      0.259918  0.156267  2016-04-06 16:34:30.566979
 ```
 
 ### Export Submission Output
