@@ -1,0 +1,140 @@
+<html>
+  <head>
+    <title>Experiment Report</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.25.6/js/jquery.tablesorter.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script>
+     $(document).ready(function() 
+       { 
+	 {% for subtask in sub_tasks %}
+         $("#{{subtask}}_experiment_result").tablesorter(); 
+	 {% endfor %}
+       } 
+     ); </script>
+    <style>
+      .is_gs {
+        color: green;
+      }
+      .no_gs {
+        
+      }
+     h1, h2, h3 {
+       text-align: center;
+     }
+    </style>
+  </head>
+
+  <body style="padding-top:70px;">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+	  </button>
+	</div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+	    <li class="active"><a href="#">Top</a></li>
+	    {% for subtask in sub_tasks %}
+	    <li><a href="#{{subtask}}_experiment_result">{{subtask}}</a></li>
+	    {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <h1>{{title}}</h1>
+      <h3>Features: {{features}}</h3>
+      <hr/>
+
+      
+      <h2>Result Summary</h2>
+      <div class="row-fluid">
+	<div class="span6">
+	  <h3>Held-out data Result(Average MAP: {{HD_results["score"]|round(3)}})</h3>
+	  <table class="table table-bordered">
+	    {% set data = HD_results %}
+	    <tr>
+	      {% for k in sub_tasks %}
+	      <th>{{k}}</th>
+	      {% endfor %}
+	    </tr>
+	    <tr>
+	      {% for k in sub_tasks %}
+	      <td>{{data[k]["score"]|round(3)}}</td>
+	      {% endfor %}
+	    </tr>
+	  </table>
+	</div>
+	<div class="span6">
+	  <h3>Cross-validation Main Result</h3>
+	  <table class="table table-bordered">
+	    {% set data = CV_results %}      
+	    <tr>
+	      {% for k in sub_tasks %}
+	      <th>{{k}}</th>
+	      {% endfor %}
+	    </tr>
+	    <tr>
+	      {% for k in sub_tasks %}
+	      <td>{{data[k]["score"][0]|round(3)}}&plusmn;{{data[k]["score"][1]|round(3)}}</td>
+	      {% endfor %}
+	    </tr>
+	  </table>
+	</div>
+      </div>
+
+      <h2>Cross Validation Error Analysis</h2>
+      {% set data = CV_results %}      
+      
+      {% for subtask in sub_tasks %}
+      <div>
+	<h3 id="{{subtask}}">Results for {{subtask}}</h3>
+
+	{% set st_data = data[subtask] %}
+	<table class="table table-bordered tablesorter"
+	       id="{{subtask}}_experiment_result">
+	  <thead>
+	    <tr>
+	      <th>Query term</th>
+	      <th>MAP</th>
+	      <th>Ranking Results</th>
+	    </tr>
+	  </thead>
+	  
+	  <tbody>
+	    {% for query_result in st_data["query_results"] %}
+	    <tr>
+	      <td>{{query_result["term"]}}</td>
+	      <td>{{query_result["MAP"]|round(3)}}</td>
+	      <td>
+		{% for ranked_result in query_result["ranked"] %}
+		{% set i = loop.index %}
+		{% if i != 1 %}, {% endif %}
+		{% if ranked_result["is_gs"] %}
+		{% set display_class = "is_gs" %}
+		{% else %}
+		{% set display_class = "no_gs" %}
+		{% endif %}
+  		<span class="{{display_class}}" title="{{ranked_result.get('debug_info', '')}}">{{i}}: {{ranked_result["entity"]}}</span>
+		{% endfor %}
+	      </td>
+	    </tr>
+	    {% endfor %}
+	  </tbody>
+	</table>
+
+      </div>
+      {% endfor %}
+    
+    </div>
+  </body>
+</html>
